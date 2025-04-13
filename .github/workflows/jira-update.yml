@@ -1,0 +1,29 @@
+name: Update Jira Issue on Merge
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  update-jira:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract Jira issue key from PR title
+        id: extract
+        run: |
+          echo "PR_TITLE=${{ github.event.pull_request.title }}" >> $GITHUB_ENV
+          echo "ISSUE_KEY=$(echo '${{ github.event.pull_request.title }}' | grep -oE '[A-Z]+-[0-9]+')" >> $GITHUB_ENV
+
+      - name: Transition Jira Issue
+        run: |
+          curl -X POST -u ${{ secrets.JIRA_EMAIL }}:${{ secrets.JIRA_API_TOKEN }} \
+          --url "${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue/${ISSUE_KEY}/transitions" \
+          --header 'Content-Type: application/json' \
+          --data '{
+            "transition": {
+              "id": "21"
+            }
+          }'
+        env:
+          ISSUE_KEY: ${{ env.ISSUE_KEY }}
