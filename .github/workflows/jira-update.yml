@@ -29,3 +29,30 @@ jobs:
         with:
           issue: ${{ env.ISSUE_KEY }}
           transition: "Done"
+
+      - name: Notify Slack of Jira issue completion
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          payload: |
+            {
+              "text": ":tada: Jira issue *${{ env.ISSUE_KEY }}* đã được chuyển sang *Done* và PR đã được merge!",
+              "attachments": [
+                {
+                  "color": "#36a64f",
+                  "fields": [
+                    {
+                      "title": "Pull Request",
+                      "value": "<${{ github.event.pull_request.html_url }}|#${{ github.event.pull_request.number }} - ${{ github.event.pull_request.title }}>",
+                      "short": false
+                    },
+                    {
+                      "title": "Author",
+                      "value": "${{ github.event.pull_request.user.login }}",
+                      "short": true
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
